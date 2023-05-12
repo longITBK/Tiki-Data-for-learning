@@ -15,7 +15,7 @@ seller_headers = {
 }
 
 seller_params = {
-    'seller_id': '17914',
+    'seller_id': '55147',
     'mpid' : '79435123',
     'spid' : '79435137',
     'trackity_id' : '7dfb9fec-ef2f-4957-1848-61b44a86b2c0',
@@ -30,6 +30,7 @@ for i in range(1, 2):
         print('request success!!!')
         print(response.json())
         value = dict()
+        value['days_since_joined'] = response.json().get('data').get('seller').get('days_since_joined')
         value['seller_avg_rating'] = response.json().get('data').get('seller').get('avg_rating_point')
         value['is_official'] = response.json().get('data').get('seller').get('is_official')
         value['review_count'] = response.json().get('data').get('seller').get('review_count')
@@ -42,4 +43,4 @@ for i in range(1, 2):
 
 df_products = pd.DataFrame(products)
 print(df_products)
-df_products.to_csv('products_abc.csv', index=False)
+# df_products.to_csv('products_abc.csv', index=False)

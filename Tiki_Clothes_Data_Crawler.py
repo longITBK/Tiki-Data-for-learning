@@ -53,7 +53,9 @@ def get_products_details(json1, json2):
         value['discount_rate'] = json1.get('discount_rate')
         value['quantity_sold'] = json1.get('quantity_sold').get('value')
         value['rating_average'] = json1.get('rating_average')
-        value['seller_product_id'] = json1.get('seller_product_id')
+        value['seller_id'] = json1.get('seller_id')
+        value['seller_name'] = json2.get('data').get('seller').get('name')
+        value['days_since_joined'] = json2.get('data').get('seller').get('days_since_joined')
         value['seller_avg_rating'] = json2.get('data').get('seller').get('avg_rating_point')
         value['is_official'] = json2.get('data').get('seller').get('is_official')
         value['review_count'] = json2.get('data').get('seller').get('review_count')
@@ -74,6 +76,7 @@ for i in range(1, 51):
         print('request success!!!')
         for product in response.json()['data']:
             # Call API of Seller
+            seller_params['seller_id'] = product.get('seller_id')
             response_seller = requests.get('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
                                     params=seller_params)
             if response_seller.status_code == 200:
@@ -87,8 +90,7 @@ for i in range(1, 51):
         if flag:
             break
 
-    time.sleep(random.randrange(3, 10))
+    time.sleep(random.randrange(5, 10))
 
 df_products = pd.DataFrame(products)
-print(df_products)
 df_products.to_csv('products.csv', index=False)
