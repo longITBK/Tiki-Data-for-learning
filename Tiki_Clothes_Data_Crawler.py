@@ -21,6 +21,7 @@ list_products_params = {
     'category': '915',
     'page': '1',
     'urlKey': 'thoi-trang-nam',
+    'sort' : 'default',
 }
 
 seller_headers = {
@@ -40,6 +41,8 @@ seller_params = {
     'trackity_id' : '7dfb9fec-ef2f-4957-1848-61b44a86b2c0',
     'platform' : 'desktop'
 }
+
+sort = ['default', 'top_seller', 'newest', 'price,asc', 'price,desc']
 
 def get_products_details(json1, json2):
     try:
@@ -65,32 +68,34 @@ def get_products_details(json1, json2):
     return value
 
 products = []
-sample_size = 1000
+sample_size = 10000
 count = 0
 flag = False
-for i in range(1, 51):
-    list_products_params['page'] = i
-    response = requests.get('https://tiki.vn/api/personalish/v1/blocks/listings', headers=list_products_headers, params=list_products_params)
-    requests.adapters.DEFAULT_RETRIES = 10
-    if response.status_code == 200:
-        print('request success!!!')
-        for product in response.json()['data']:
-            # Call API of Seller
-            seller_params['seller_id'] = product.get('seller_id')
-            response_seller = requests.get('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
-                                    params=seller_params)
-            if response_seller.status_code == 200:
-                value = get_products_details(product, response_seller.json())
-                products.append(value)
-                count += 1
-                if count == sample_size:
-                    flag = True
-                    break
-        print('     ' + str(count) + ' samples collected.')
-        if flag:
-            break
 
-    time.sleep(random.randrange(5, 10))
+for s in sort:
+    list_products_params['sort'] = s
+    for i in range(1, 51):
+        list_products_params['page'] = i
+        response = requests.get('https://tiki.vn/api/personalish/v1/blocks/listings', headers=list_products_headers, params=list_products_params)
+        requests.adapters.DEFAULT_RETRIES = 10
+        if response.status_code == 200:
+            print('request success!!!')
+            for product in response.json()['data']:
+                # Call API of Seller
+                seller_params['seller_id'] = product.get('seller_id')
+                response_seller = requests.get('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
+                                        params=seller_params)
+                if response_seller.status_code == 200:
+                    value = get_products_details(product, response_seller.json())
+                    products.append(value)
+                    count += 1
+                    if count == sample_size:
+                        flag = True
+                        break
+            print('     ' + str(count) + ' samples collected.')
+            if flag:
+                break
+        time.sleep(random.randrange(7, 10))
 
 df_products = pd.DataFrame(products)
-df_products.to_csv('products.csv', index=False)
+df_products.to_csv('BigDS.csv', index=False)
