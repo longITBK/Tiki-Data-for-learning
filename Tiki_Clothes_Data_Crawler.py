@@ -17,7 +17,7 @@ list_products_params = {
     'limit': '40',
     'include': 'advertisement',
     'aggregations': '2',
-    'trackity_id': '2c1a732c-db42-f41d-bdbb-8c6afd15912a',
+    'trackity_id': '7dfb9fec-ef2f-4957-1848-61b44a86b2c0',
     'category': '915',
     'page': '1',
     'urlKey': 'thoi-trang-nam',
@@ -42,7 +42,13 @@ seller_params = {
     'platform' : 'desktop'
 }
 
-sort = ['default', 'top_seller', 'newest', 'price,asc', 'price,desc']
+urlKey_category = {
+    'thoi-trang-nam' : '915',
+    'giay-dep-nam' : '1686',
+    'tui-thoi-trang-nam' : '27616'
+}
+
+sort = ['default', 'top_seller']
 
 def get_products_details(json1, json2):
     try:
@@ -64,6 +70,7 @@ def get_products_details(json1, json2):
         value['review_count'] = json2.get('data').get('seller').get('review_count')
         value['total_follower'] = json2.get('data').get('seller').get('total_follower')
     except Exception as e:
+        value = None
         print(e)
     return value
 
@@ -71,31 +78,39 @@ products = []
 sample_size = 10000
 count = 0
 flag = False
+for key, category in urlKey_category.items():
+    list_products_params['urlKey'] = key
+    list_products_params['category'] = category
+    for s in sort:
+        list_products_params['sort'] = s
+        for i in range(1, 51):
+            list_products_params['page'] = i
+            response = requests.get('https://tiki.vn/api/personalish/v1/blocks/listings', headers=list_products_headers, params=list_products_params)
+            requests.adapters.DEFAULT_RETRIES = 10
+            if response.status_code == 200:
+                print('request success!!!')
+                for product in response.json()['data']:
+                    # Call API of Seller
+                    seller_params['seller_id'] = product.get('seller_id')
+                    response_seller = requests.get('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
+                                            params=seller_params)
+                    if response_seller.status_code == 200:
+                        value = get_products_details(product, response_seller.json())
+                        if value != None:
+                            products.append(value)
+                            count += 1
+                        if count == sample_size:
+                            flag = True
+                            break
+                print('     ' + str(count) + ' samples collected.')
+                if flag:
+                    break            
+            time.sleep(random.randrange(7, 10))
+        if flag:
+            break
+    if flag:
+        break
 
-for s in sort:
-    list_products_params['sort'] = s
-    for i in range(1, 51):
-        list_products_params['page'] = i
-        response = requests.get('https://tiki.vn/api/personalish/v1/blocks/listings', headers=list_products_headers, params=list_products_params)
-        requests.adapters.DEFAULT_RETRIES = 10
-        if response.status_code == 200:
-            print('request success!!!')
-            for product in response.json()['data']:
-                # Call API of Seller
-                seller_params['seller_id'] = product.get('seller_id')
-                response_seller = requests.get('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
-                                        params=seller_params)
-                if response_seller.status_code == 200:
-                    value = get_products_details(product, response_seller.json())
-                    products.append(value)
-                    count += 1
-                    if count == sample_size:
-                        flag = True
-                        break
-            print('     ' + str(count) + ' samples collected.')
-            if flag:
-                break
-        time.sleep(random.randrange(7, 10))
 
 df_products = pd.DataFrame(products)
 df_products.to_csv('BigDS.csv', index=False)
