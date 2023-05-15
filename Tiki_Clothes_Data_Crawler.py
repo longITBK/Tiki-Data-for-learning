@@ -58,16 +58,17 @@ def get_products_details(json1, json2):
         value['brand'] = json1.get('brand_name')
         value['original_price'] = json1.get('original_price')
         value['discount'] = json1.get('discount')
-        value['price'] = json1.get('price')
+        value['current_price'] = json1.get('price')
         value['discount_rate'] = json1.get('discount_rate')
         value['quantity_sold'] = json1.get('quantity_sold').get('value')
         value['rating_average'] = json1.get('rating_average')
+        value['product_review_count'] = json1.get('review_count')
         value['seller_id'] = json1.get('seller_id')
         value['seller_name'] = json2.get('data').get('seller').get('name')
         value['days_since_joined'] = json2.get('data').get('seller').get('days_since_joined')
-        value['seller_avg_rating'] = json2.get('data').get('seller').get('avg_rating_point')
+        value['seller_rating_average'] = json2.get('data').get('seller').get('avg_rating_point')
         value['is_official'] = json2.get('data').get('seller').get('is_official')
-        value['review_count'] = json2.get('data').get('seller').get('review_count')
+        value['seller_review_count'] = json2.get('data').get('seller').get('review_count')
         value['total_follower'] = json2.get('data').get('seller').get('total_follower')
     except Exception as e:
         value = None
@@ -75,7 +76,7 @@ def get_products_details(json1, json2):
     return value
 
 products = []
-sample_size = 10000
+sample_size = 1000
 count = 0
 flag = False
 for key, category in urlKey_category.items():
@@ -113,4 +114,5 @@ for key, category in urlKey_category.items():
 
 
 df_products = pd.DataFrame(products)
-df_products.to_csv('BigDS.csv', index=False)
+print(df_products)
+df_products.to_csv('SmallDS.csv', index=False)

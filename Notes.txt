@@ -1,0 +1,13 @@
+1. Thu thập dữ liệu:
+- Tự thu thập dữ liệu (tự crawl).	-> checked
+- Số lượng: >1000 mẫu, dẫn nguồn dữ liệu và mô tả cách thức thu thập.		-> checked
+- Xuất ra các thống kê mô tả trực quan về dữ liệu.		
+2. Trích xuất đặc trưng:
+- Trình bày việc lựa chọn đặc trưng, làm sạch và chuẩn hóa dữ liệu, giảm chiều, ...
+- Trực quan hoá kết quả của các quá trình trên.
+3. Mô hình hóa dữ liệu:
+- Chọn các mô hình phù hợp (ít nhất 2 mô hình/thuật toán).
+- Chia dữ liệu thành Train/Validation/Test set theo tỉ lệ phù hợp.
+- Trình bày các đồ thị thể hiện hiệu quả của các mô hình trong quá trình huấn
+luyện/Hiệu chỉnh/Kiểm thử.
+- So sánh hiệu quả của các mô hình bằng bảng dữ liệu hoặc đồ thị.
