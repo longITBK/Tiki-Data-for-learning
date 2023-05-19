@@ -2,6 +2,7 @@ import requests
 import time
 import random
 import pandas as pd
+from retrying import retry
 
 list_products_headers = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35',
@@ -25,7 +26,7 @@ list_products_params = {
 }
 
 seller_headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.35',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.42',
     'Accept': 'application/json, text/plain, */*',
     'Accept-Language': 'vi,en-US;q=0.9,en;q=0.8',
     #'Referer': 'https://tiki.vn/ao-chong-nang-nam-cao-cap--thong-hoi--chong-nang--chong-tia-uv--chong-bam-bui---formen-shop---fmtht024-p79435123.html?itm_campaign=CTP_YPD_TKA_PLA_UNK_ALL_UNK_UNK_UNK_UNK_X.124876_Y.1228710_Z.2878025_CN.Ad-group-124876&itm_medium=CPC&itm_source=tiki-ads&spid=79435137',
@@ -44,8 +45,12 @@ seller_params = {
 
 urlKey_category = {
     'thoi-trang-nam' : '915',
-    'giay-dep-nam' : '1686',
-    'tui-thoi-trang-nam' : '27616'
+    'tui-thoi-trang-nam' : '27616',
+    # 'giay-dep-nam' : '1686'
+    'ao-thun-nam' : '917',
+    'ao-so-mi-nam' : '918',
+    'quan-nam' : '27562'
+
 }
 
 sort = ['default', 'top_seller']
@@ -76,9 +81,25 @@ def get_products_details(json1, json2):
     return value
 
 products = []
-sample_size = 1000
+sample_size = 1000000
 count = 0
 flag = False
+
+# Khởi tạo session để sử dụng cho tất cả các request
+session = requests.Session()
+# Đặt số lần retry mặc định là 10
+session.mount('https://', requests.adapters.HTTPAdapter(max_retries=10))
+
+@retry(wait_random_min=5000, wait_random_max=10000)
+def get_response(url, headers, params):
+    response = session.get(url, headers=headers, params=params)
+    # Kiểm tra trạng thái của response
+    if response.status_code == 200:
+        return response
+    else:
+        # Nếu response lỗi, raise một exception để retry lại
+        raise ValueError(f"Request failed with error {response.status_code}. Retrying...")
+
 for key, category in urlKey_category.items():
     list_products_params['urlKey'] = key
     list_products_params['category'] = category
@@ -86,14 +107,17 @@ for key, category in urlKey_category.items():
         list_products_params['sort'] = s
         for i in range(1, 51):
             list_products_params['page'] = i
-            response = requests.get('https://tiki.vn/api/personalish/v1/blocks/listings', headers=list_products_headers, params=list_products_params)
+            # response = requests.get('https://tiki.vn/api/personalish/v1/blocks/listings', headers=list_products_headers, params=list_products_params)
+            response = get_response('https://tiki.vn/api/personalish/v1/blocks/listings', headers=list_products_headers, params=list_products_params)
             requests.adapters.DEFAULT_RETRIES = 10
             if response.status_code == 200:
                 print('request success!!!')
                 for product in response.json()['data']:
                     # Call API of Seller
                     seller_params['seller_id'] = product.get('seller_id')
-                    response_seller = requests.get('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
+                    # response_seller = requests.get('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
+                    #                         params=seller_params)
+                    response_seller = get_response('https://tiki.vn/api/shopping/v2/widgets/seller', headers=seller_headers,
                                             params=seller_params)
                     if response_seller.status_code == 200:
                         value = get_products_details(product, response_seller.json())
@@ -115,4 +139,4 @@ for key, category in urlKey_category.items():
 
 df_products = pd.DataFrame(products)
 print(df_products)
-df_products.to_csv('SmallDS.csv', index=False)
+df_products.to_csv('HugeDS.csv', index=False)
