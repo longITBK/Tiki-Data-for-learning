@@ -22,3 +22,7 @@ seller_rating_average    0
 is_official              0
 seller_review_count      0
 total_follower           0
+
+Khó khăn:
+    - API của các sản phẩm ít phổ biến và không bán chạy thường bị trống xử liệu nhiều khi request về
+    
